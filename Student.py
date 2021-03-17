@@ -21,7 +21,8 @@ class Student:
         self.aod_var=StringVar()
         self.add_var=StringVar()
 
-
+        self.search_by=StringVar()
+        self.search_txt=StringVar()
 
 
 
@@ -87,9 +88,9 @@ class Student:
 
         #Button in Button_Frame
         addbtn=Button(Button_Frame,text="ADD",width=10,command=self.add_students).grid(row=0,column=0,padx=10,pady=10)
-        updatebtn=Button(Button_Frame,text="UPDATE",width=10).grid(row=0,column=1,padx=10,pady=10)
-        deletebtn=Button(Button_Frame,text="DELETE",width=10).grid(row=0,column=2,padx=10,pady=10)
-        clearbtn=Button(Button_Frame,text="CLEAR",width=10).grid(row=0,column=3,padx=10,pady=10)
+        updatebtn=Button(Button_Frame,text="UPDATE",width=10,command=self.update_data).grid(row=0,column=1,padx=10,pady=10)
+        deletebtn=Button(Button_Frame,text="DELETE",width=10,command=self.delete_data).grid(row=0,column=2,padx=10,pady=10)
+        clearbtn=Button(Button_Frame,text="CLEAR",width=10,command=self.clear).grid(row=0,column=3,padx=10,pady=10)
 
         #Detail_Frame
         Detail_Frame=Frame(self.root,bd=4,relief=RIDGE,bg="pink")
@@ -98,14 +99,14 @@ class Student:
         #Detail_Frame components
         lbl_search=Label(Detail_Frame,text="SEARCH",font=("times new roman",20,"bold"),bg="pink",fg="black")
         lbl_search.grid(row=0,column=0,pady=0,padx=10,sticky="w")
-        combo_search=ttk.Combobox(Detail_Frame,width=10,font=("times new roman",15,"bold"),state="readonly")
-        combo_search['values']=("Name","Admit Date","ID","Contact")
+        combo_search=ttk.Combobox(Detail_Frame,textvariable=self.search_by,width=10,font=("times new roman",15),state="readonly")
+        combo_search['values']=("Name","Admit Date","id","Contact")
         combo_search.grid(row=0,column=1,pady=0,padx=0,sticky="w")
 
-        txt_search=Entry(Detail_Frame,width=10,font=("times new roman",15,"bold"),bd=5,relief=GROOVE)
+        txt_search=Entry(Detail_Frame,textvariable=self.search_txt,width=10,font=("times new roman",15),bd=5,relief=GROOVE)
         txt_search.grid(row=0,column=2,pady=0,padx=10,sticky="w")
-        searchbtn=Button(Detail_Frame,text="SEARCH",width=10).grid(row=0,column=3,padx=0,pady=0)
-        showallbtn=Button(Detail_Frame,text="SHOW ALL",width=10).grid(row=0,column=4,padx=10,pady=0)
+        searchbtn=Button(Detail_Frame,text="SEARCH",width=10,command=self.search_data).grid(row=0,column=3,padx=0,pady=0)
+        showallbtn=Button(Detail_Frame,text="SHOW ALL",width=10,command=self.fetch_data).grid(row=0,column=4,padx=10,pady=0)
 
         #Table_Frame
         Table_Frame=Frame(Detail_Frame,bd=4,relief=RIDGE,bg="pink")
@@ -114,31 +115,33 @@ class Student:
         scroll_x=Scrollbar(Table_Frame,orient=HORIZONTAL)
         scroll_y=Scrollbar(Table_Frame,orient=VERTICAL)
         #Student_Table
-        Student_Table=ttk.Treeview(Table_Frame,columns=("name","id","age","adm","gender","contact","condition","aod","add"),xscrollcommand=scroll_x.set,yscrollcommand=scroll_y.set)
+        self.Student_Table=ttk.Treeview(Table_Frame,columns=("name","id","age","adm","gender","contact","condition","aod","add"),xscrollcommand=scroll_x.set,yscrollcommand=scroll_y.set)
         scroll_x.pack(side=BOTTOM,fill=X)
         scroll_y.pack(side=RIGHT,fill=Y)
-        scroll_x.config(command=Student_Table.xview)
-        scroll_y.config(command=Student_Table.yview)
-        Student_Table.heading("name",text="Name")
-        Student_Table.heading("id",text="ID")
-        Student_Table.heading("age",text="Age")
-        Student_Table.heading("adm",text="Admit Date")
-        Student_Table.heading("gender",text="Gender")
-        Student_Table.heading("contact",text="Contact")
-        Student_Table.heading("condition",text="Condition")
-        Student_Table.heading("aod",text="Other Disease")
-        Student_Table.heading("add",text="Address")
-        Student_Table["show"]="headings"
-        Student_Table.column("name",width=100)
-        Student_Table.column("id",width=50)
-        Student_Table.column("age",width=50)
-        Student_Table.column("adm",width=100)
-        Student_Table.column("gender",width=50)
-        Student_Table.column("contact",width=100)
-        Student_Table.column("condition",width=50)
-        Student_Table.column("aod",width=100)
-        Student_Table.column("add",width=100)
-        Student_Table.pack(fill=BOTH,expand=1)
+        scroll_x.config(command=self.Student_Table.xview)
+        scroll_y.config(command=self.Student_Table.yview)
+        self.Student_Table.heading("name",text="Name")
+        self.Student_Table.heading("id",text="ID")
+        self.Student_Table.heading("age",text="Age")
+        self.Student_Table.heading("adm",text="Admit Date")
+        self.Student_Table.heading("gender",text="Gender")
+        self.Student_Table.heading("contact",text="Contact")
+        self.Student_Table.heading("condition",text="Condition")
+        self.Student_Table.heading("aod",text="Other Disease")
+        self.Student_Table.heading("add",text="Address")
+        self.Student_Table["show"]="headings"
+        self.Student_Table.column("name",width=100)
+        self.Student_Table.column("id",width=50)
+        self.Student_Table.column("age",width=50)
+        self.Student_Table.column("adm",width=100)
+        self.Student_Table.column("gender",width=50)
+        self.Student_Table.column("contact",width=100)
+        self.Student_Table.column("condition",width=50)
+        self.Student_Table.column("aod",width=100)
+        self.Student_Table.column("add",width=100)
+        self.Student_Table.pack(fill=BOTH,expand=1)
+        self.Student_Table.bind("<ButtonRelease-1>",self.get_cursor)
+        self.fetch_data()
 
     def add_students(self):
         con=pymysql.connect(host="localhost",user="root",password="root",database="hospital")
@@ -153,7 +156,90 @@ class Student:
                                                                               self.aod_var.get(),
                                                                               self.txt_add.get('1.0',END)))
         con.commit()
+        self.fetch_data()
+        self.clear()
         con.close()
+
+    def fetch_data(self):
+        con=pymysql.connect(host="localhost",user="root",password="root",database="hospital")
+        cur=con.cursor()
+        cur.execute("select * from patient")
+        rows=cur.fetchall()
+        if len(rows)!=0:
+            self.Student_Table.delete(*self.Student_Table.get_children())
+            for row in rows:
+                self.Student_Table.insert('',END,values=row)
+            con.commit()
+        con.close()
+
+    def clear(self):
+        self.name_var.set("")
+        self.id_var.set("")
+        self.age_var.set("")
+        self.date_var.set("")
+        self.gender_var.set("")
+        self.contact_var.set("")
+        self.condition_var.set("")
+        self.aod_var.set("")
+        self.txt_add.delete('1.0',END)
+
+    def get_cursor(self,ev):
+        cursor_row=self.Student_Table.focus()
+        contents=self.Student_Table.item(cursor_row)
+        row=contents['values']
+        self.name_var.set(row[0])
+        self.id_var.set(row[1])
+        self.age_var.set(row[2])
+        self.date_var.set(row[3])
+        self.gender_var.set(row[4])
+        self.contact_var.set(row[5])
+        self.condition_var.set(row[6])
+        self.aod_var.set(row[7])
+        self.txt_add.delete('1.0',END)
+        self.txt_add.insert(END,row[8])
+
+    #update_data not working
+    def update_data(self):
+        con=pymysql.connect(host="localhost",user="root",password="root",database="hospital")
+        cur=con.cursor()
+        cur.execute("update patient set name=%s,age=%s,adm=%s,gender=%s,contact=%s,condition=%s,aod=%s,add=%s where id=%s",(
+                                                                              self.name_var.get(),                                                                        
+                                                                              self.age_var.get(),
+                                                                              self.date_var.get(),
+                                                                              self.gender_var.get(),
+                                                                              self.contact_var.get(),
+                                                                              self.condition_var.get(),
+                                                                              self.aod_var.get(),
+                                                                              self.txt_add.get('1.0',END),
+                                                                              self.id_var.get()
+                                                                              ))
+        con.commit()
+        self.fetch_data()
+        self.clear()
+        con.close()
+
+    def delete_data(self):
+        con=pymysql.connect(host="localhost",user="root",password="root",database="hospital")
+        cur=con.cursor()
+        cur.execute("delete from patient where id=%s",self.id_var.get())
+        con.commit()
+        con.close()
+        self.fetch_data()
+        self.clear()
+
+    #search_data not working
+    def search_data(self):
+        con=pymysql.connect(host="localhost",user="root",password="root",database="hospital")
+        cur=con.cursor()
+        cur.execute("select * from patient where"+str(self.search_by.get())+" LIKE '%"+str(self.search_txt.get())+"%'")
+        rows=cur.fetchall()
+        if len(rows)!=0:
+            self.Student_Table.delete(*self.Student_Table.get_children())
+            for row in rows:
+                self.Student_Table.insert('',END,values=row)
+            con.commit()
+        con.close()
+
 
 root=Tk()
 ob=Student(root)
